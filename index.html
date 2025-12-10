@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MarineLab - Kalkulator (Netto) + Live DB</title>
+  <title>MarineLab Pro v2.1</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
@@ -17,7 +17,7 @@
     }
     .container { 
       width: 100%;
-      max-width: 1200px; /* Increased for monitors */
+      max-width: 1200px;
       background: white; 
       border-radius: 20px; 
       box-shadow: 0 20px 50px rgba(0,0,0,0.2);
@@ -39,7 +39,7 @@
     .header h1 { font-size: 24px; margin: 0; }
     .status-badge { font-size: 12px; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 15px; }
 
-    /* Layout for Monitor (Desktop) */
+    /* Layout */
     .main-content {
       display: flex;
       flex-wrap: wrap;
@@ -72,17 +72,32 @@
     }
     select:focus, input:focus { outline: none; border-color: #4472C4; box-shadow: 0 0 0 3px rgba(68,114,196,0.1); }
 
-    /* Service Grid (Right Panel) */
+    /* ID Display */
+    .id-display {
+      background: #e9ecef;
+      padding: 10px;
+      text-align: center;
+      font-family: monospace;
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+      border: 1px solid #ccc;
+    }
+
+    /* Service Grid */
     .service-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 10px;
-      max-height: 400px;
+      max-height: 350px;
       overflow-y: auto;
       padding: 5px;
     }
     .service-item {
-      padding: 15px 10px;
+      padding: 10px;
       border: 2px solid #eef2f7;
       border-radius: 8px;
       cursor: pointer;
@@ -94,15 +109,27 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 80px;
+      min-height: 70px;
     }
     .service-item:hover { border-color: #4472C4; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     .service-item.selected { background: #4472C4; color: white; border-color: #365A99; }
     
+    /* Manual Service Input */
+    .manual-service-box {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      border: 1px solid #bbdefb;
+    }
+    .manual-row { display: flex; gap: 10px; align-items: flex-end; }
+    .manual-btn { background: #1976d2; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+
     /* Selected List */
     .services-list {
       display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
       min-height: 40px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #cbd5e0;
+      margin-top: 15px;
     }
     .service-tag {
       background: #fff; border: 1px solid #4472C4; color: #4472C4;
@@ -111,13 +138,13 @@
     }
     .service-tag span { cursor: pointer; font-weight: bold; color: #dc3545; }
 
-    /* Results & Footer */
+    /* Results */
     .results-card {
       background: white;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-      margin-top: auto; /* Pushes to bottom */
+      margin-top: auto; 
     }
     .result-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #555; }
     .total-profit { 
@@ -140,7 +167,6 @@
       z-index: 1000; font-weight: bold; color: #4472C4;
     }
 
-    /* Mobile Responsiveness */
     @media (max-width: 768px) {
       .container { flex-direction: column; max-height: none; border-radius: 0; }
       body { padding: 0; }
@@ -152,43 +178,46 @@
 </head>
 <body>
 
-  <!-- Loader -->
   <div id="loader" class="loading-overlay" style="display:none;">🔄 Pobieranie bazy danych...</div>
 
   <div class="container">
     <div class="header">
-      <h1>🛠️ MarineLab Pro <small style="font-size:0.6em; opacity:0.8">v2.0</small></h1>
+      <h1>🛠️ MarineLab Pro <small style="font-size:0.6em; opacity:0.8">v2.1</small></h1>
       <div class="status-badge" id="dbStatus">📦 Baza: Domyślna</div>
     </div>
 
     <div class="main-content">
-      <!-- LEFT PANEL: Inputs -->
+      <!-- LEFT PANEL -->
       <div class="panel-left">
+        
+        <!-- ID Display -->
+        <label>ID Arkusza:</label>
+        <div id="generatedID" class="id-display">-----/--/--/-</div>
+
         <div class="form-group">
-          <label>📅 Data projektu</label>
-          <input type="month" id="projectDate">
+          <label>📅 Data realizacji zlecenia</label>
+          <input type="month" id="projectDate" onchange="generateID()">
         </div>
 
         <div class="form-group">
-          <label>📋 Nazwa faktury / Zlecenie</label>
-          <input type="text" id="invoiceName" placeholder="Wpisz nazwę...">
+          <label>Nr i data zlecenia (opis)</label>
+          <input type="text" id="invoiceName" placeholder="Z Subiekt NeksoPro...">
         </div>
 
         <div class="form-group">
-          <label>👷 Mechanik</label>
-          <select id="mechanic" onchange="loadServices()">
+          <label>👷 Mechanik/Wykonawca zlecenia</label>
+          <select id="mechanic" onchange="handleMechanicChange()">
             <option value="">-- Wybierz --</option>
-            <!-- Options loaded via JS -->
           </select>
         </div>
 
         <div class="form-row">
           <div>
-            <label>💰 Faktura (Netto)</label>
+            <label>💰 Przychód netto wg faktury</label>
             <input type="number" id="invoiceAmount" placeholder="0.00" oninput="updateResults()">
           </div>
           <div>
-            <label>⚙️ Koszt Części (Netto)</label>
+            <label>⚙️ Części zam. koszt netto</label>
             <input type="number" id="partsCost" placeholder="0.00" oninput="updateResults()">
           </div>
         </div>
@@ -200,30 +229,40 @@
         <p id="msg" style="text-align:center; margin-top:10px; font-size:12px; height:15px;"></p>
       </div>
 
-      <!-- RIGHT PANEL: Services & Logic -->
+      <!-- RIGHT PANEL -->
       <div class="panel-right">
-        <label>🔧 Wybierz wykonane usługi:</label>
+        <label>Rodzaje wykonanych usług:</label>
         <div id="servicesGrid" class="service-grid">
           <div style="grid-column: 1/-1; text-align:center; color:#999; padding: 40px;">
-            Najpierw wybierz mechanika 👈
+            Najpierw wybierz wykonawcę 👈
           </div>
         </div>
 
-        <label style="margin-top:20px;">Wybrane:</label>
+        <!-- Custom Service Input (Inne-3) -->
+        <div class="manual-service-box" id="manualBox" style="display:none;">
+          <label style="margin-bottom:5px; font-size:11px;">Dodaj niestandardową usługę (Inne-3/Dojazd)</label>
+          <div class="manual-row">
+            <input type="text" id="customName" placeholder="Opis (np. Dojazd)" value="Inne-3">
+            <input type="number" id="customPrice" placeholder="Kwota" style="width:100px;">
+            <button class="manual-btn" onclick="addCustomService()">Dodaj</button>
+          </div>
+        </div>
+
+        <label style="margin-top:20px;">Zrealizowane usługi:</label>
         <div id="servicesList" class="services-list"></div>
 
         <div class="results-card">
           <div class="result-row">
-            <span>Robocizna (Koszt):</span> <strong id="laborCost">0.00 zł</strong>
+            <span>Robocizna koszt netto:</span> <strong id="laborCost">0.00 zł</strong>
           </div>
           <div class="result-row">
-            <span>Części:</span> <strong id="partsCostDisplay">0.00 zł</strong>
+            <span>Części zam. koszt netto:</span> <strong id="partsCostDisplay">0.00 zł</strong>
           </div>
           <div class="result-row">
-            <span>Przychód (Netto):</span> <strong id="invoiceTotalDisplay">0.00 zł</strong>
+            <span>Przychód netto wg faktury:</span> <strong id="invoiceTotalDisplay">0.00 zł</strong>
           </div>
           <div class="total-profit" id="companyProfit">
-            Zysk: 0.00 zł
+            Wynik: 0.00 zł
           </div>
         </div>
       </div>
@@ -231,71 +270,96 @@
   </div>
 
   <script>
-
+    // --- KONFIGURACJA ---
     const SEND_WEBHOOK_URL = 'https://hook.eu2.make.com/s3zw427rmr92hlo9sb4s9s8g4d6fsa42';
-    const DB_WEBHOOK_URL = 'https://hook.eu2.make.com/as0emqranzdjwst67bvy37101wv5gp1s'; 
+    // Wklej tutaj swój link do pobierania bazy (jeśli masz)
+    const DB_WEBHOOK_URL = 'https://hook.eu2.make.com/TWOJ_KOD_DO_BAZY'; 
 
-    // Default fallback database
     const DEFAULT_PRICES = {
-      "Marek": { "Roboczogodzina": 300, "1-cyl przegląd": 210, "2-cyl przegląd": 320, "4-cyl przegląd": 900, "Mały montaż": 1500, "Duży montaż": 2500 },
-      "Waldek": { "1 godzina": 100, "2 godziny": 200, "Przegląd": 250 },
-      "Jarek": { "1 godzina": 100, "2 godziny": 200 },
-      "Jacek": { "1 godzina": 100, "2 godziny": 200 },
+      "Marek": { 
+        "Roboczogodzina": 300, 
+        "1-cyl przegląd": 210, 
+        "2-cyl przegląd": 320, 
+        "4-cyl przegląd": 900, 
+        "Mały montaż": 1500, 
+        "Inne-1": 100,
+        "Inne-2": 200
+      },
+      "Waldek": { "1 godzina": 100, "Inne-1": 100, "Inne-2": 200 },
+      "Jarek": { "1 godzina": 100, "Inne-1": 100, "Inne-2": 200 },
       "Roman": {}
     };
 
     let pricesDB = DEFAULT_PRICES;
     let selectedServices = [];
+    let currentID = "";
 
     // --- INITIALIZATION ---
     window.onload = async function() {
-      // Set default date to current month
       const dateInput = document.getElementById('projectDate');
       const now = new Date();
-      const month = (now.getMonth() + 1).toString().padStart(2, '0');
-      dateInput.value = `${now.getFullYear()}-${month}`;
+      dateInput.value = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
 
-      // Try to fetch dynamic prices
       await fetchPrices();
-      
-      // Populate Mechanics Dropdown
       populateMechanics();
+      generateID();
     };
 
-    // --- DATABASE LOGIC ---
-        // --- DATABASE LOGIC ---
+    // --- LOGIC ---
+    function handleMechanicChange() {
+      loadServices();
+      generateID();
+    }
+
+    function generateID() {
+      const dateVal = document.getElementById('projectDate').value; // YYYY-MM
+      const mechVal = document.getElementById('mechanic').value;
+      
+      if (!dateVal) return;
+
+      // 1. Numer kolejny (Losowy 5 cyfr, bo HTML nie ma bazy danych liczników)
+      const sequence = Math.floor(10000 + Math.random() * 90000); 
+      
+      // 2. Data
+      const [year, month] = dateVal.split('-');
+      const shortYear = year.slice(2);
+
+      // 3. Inicjał
+      const initial = mechVal ? mechVal.charAt(0).toUpperCase() : 'X';
+
+      // Format: 11111/22/33/A
+      currentID = `${sequence}/${month}/${shortYear}/${initial}`;
+      document.getElementById('generatedID').textContent = currentID;
+    }
+
     async function fetchPrices() {
-      if (!DB_WEBHOOK_URL) return; // Use defaults
+      if (!DB_WEBHOOK_URL || DB_WEBHOOK_URL.includes('TWOJ_KOD')) return; 
 
       document.getElementById('loader').style.display = 'flex';
       try {
         const response = await fetch(DB_WEBHOOK_URL);
         if (response.ok) {
           const rawData = await response.json();
-          
-          // NEW LOGIC: Convert "Flat List" (Excel style) to "Grouped Object" (App style)
-          // Expected input: [{"Technik": "Marek", "Service": "Roboczogodzina", "Price_Net": 300}, ...]
-          
           let newPricesDB = {};
 
           if (Array.isArray(rawData)) {
             rawData.forEach(row => {
-              // Adjust these keys if your Make.com output uses different names (e.g. "A", "B", "C")
-              // We try to be flexible here:
               let mechName = row["Technik"] || row["A"] || row[0];
               let svcName = row["Service"] || row["B"] || row[1];
               let price = row["Price_Net"] || row["C"] || row[2];
 
               if (mechName && svcName) {
-                if (!newPricesDB[mechName]) {
-                  newPricesDB[mechName] = {};
-                }
+                if (!newPricesDB[mechName]) newPricesDB[mechName] = {};
                 newPricesDB[mechName][svcName] = Number(price);
               }
             });
+            // Dodaj Inne-1 i Inne-2 jeśli ich nie ma w Excelu
+            Object.keys(newPricesDB).forEach(m => {
+              if(!newPricesDB[m]["Inne-1"]) newPricesDB[m]["Inne-1"] = 100;
+              if(!newPricesDB[m]["Inne-2"]) newPricesDB[m]["Inne-2"] = 200;
+            });
           }
 
-          // Only update if we found valid data
           if (Object.keys(newPricesDB).length > 0) {
             pricesDB = newPricesDB;
             document.getElementById('dbStatus').textContent = '🟢 Baza: Excel (Live)';
@@ -304,15 +368,11 @@
           }
         }
       } catch (e) {
-        console.error("Failed to fetch DB, using default", e);
-        document.getElementById('dbStatus').textContent = '⚠️ Baza: Offline';
+        console.error("Błąd bazy", e);
       } finally {
         document.getElementById('loader').style.display = 'none';
-        // Refresh dropdown with new names
-        populateMechanics();
       }
     }
-
 
     function populateMechanics() {
       const select = document.getElementById('mechanic');
@@ -325,26 +385,23 @@
       });
     }
 
-    // --- UI LOGIC ---
     function loadServices() {
       let mechanic = document.getElementById('mechanic').value;
       let grid = document.getElementById('servicesGrid');
+      let manualBox = document.getElementById('manualBox');
       
       selectedServices = [];
       updateResults();
       
       if (!mechanic) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#999; padding: 40px;">Najpierw wybierz mechanika 👈</div>';
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#999; padding: 40px;">Najpierw wybierz wykonawcę 👈</div>';
+        manualBox.style.display = 'none';
         return;
       }
 
+      manualBox.style.display = 'block'; // Pokaż pole Inne-3
       const services = pricesDB[mechanic] || {};
       const keys = Object.keys(services);
-
-      if (keys.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 20px;">Brak cennika dla tego mechanika (lub wpisz manualnie)</div>';
-        return;
-      }
 
       grid.innerHTML = keys.map(svc => `
         <div class="service-item" onclick="toggleService('${svc}')">
@@ -357,8 +414,21 @@
     function toggleService(serviceName) {
       let mechanic = document.getElementById('mechanic').value;
       let cost = pricesDB[mechanic][serviceName];
-      
       selectedServices.push({ name: serviceName, cost: cost });
+      renderSelectedList();
+      updateResults();
+    }
+
+    function addCustomService() {
+      const name = document.getElementById('customName').value || "Inne-3";
+      const price = parseFloat(document.getElementById('customPrice').value);
+      
+      if (!price || price <= 0) return alert("Wpisz poprawną kwotę!");
+
+      selectedServices.push({ name: name, cost: price });
+      
+      // Reset input
+      document.getElementById('customPrice').value = '';
       renderSelectedList();
       updateResults();
     }
@@ -367,7 +437,7 @@
       const list = document.getElementById('servicesList');
       list.innerHTML = selectedServices.map((item, index) => `
         <div class="service-tag">
-          ${item.name} 
+          ${item.name} (${item.cost} zł)
           <span onclick="removeService(${index})">×</span>
         </div>
       `).join('');
@@ -382,50 +452,61 @@
     function updateResults() {
       let invoiceAmount = parseFloat(document.getElementById('invoiceAmount').value) || 0;
       let partsCost = parseFloat(document.getElementById('partsCost').value) || 0;
-      
-      // Calculate Labor
       let laborCost = selectedServices.reduce((sum, item) => sum + item.cost, 0);
-      
-      // Calculate Profit (All Netto)
       let profit = invoiceAmount - partsCost - laborCost;
 
-      // Display
       document.getElementById('laborCost').textContent = laborCost.toFixed(2) + ' zł';
       document.getElementById('partsCostDisplay').textContent = partsCost.toFixed(2) + ' zł';
       document.getElementById('invoiceTotalDisplay').textContent = invoiceAmount.toFixed(2) + ' zł';
       
       const profitEl = document.getElementById('companyProfit');
-      profitEl.textContent = 'Zysk: ' + profit.toFixed(2) + ' zł';
+      profitEl.textContent = 'Wynik: ' + profit.toFixed(2) + ' zł';
       profitEl.style.color = profit >= 0 ? '#28a745' : '#dc3545';
 
-      // Validate Send Button
       const isValid = document.getElementById('projectDate').value && 
                       document.getElementById('invoiceName').value && 
                       document.getElementById('mechanic').value;
       document.getElementById('sendBtn').disabled = !isValid;
     }
 
-    async function sendToMake() {
+        async function sendToMake() {
       const btn = document.getElementById('sendBtn');
       const msg = document.getElementById('msg');
       
       btn.disabled = true;
       btn.textContent = '⏳ Wysyłanie...';
 
-      // Prepare Payload
       let invoiceAmount = parseFloat(document.getElementById('invoiceAmount').value) || 0;
       let partsCost = parseFloat(document.getElementById('partsCost').value) || 0;
       let laborCost = selectedServices.reduce((sum, item) => sum + item.cost, 0);
 
+      // Obliczenie wyniku (Zysku)
+      let result = invoiceAmount - partsCost - laborCost;
+
       const payload = {
-        project_date: document.getElementById('projectDate').value,
-        invoice_name: document.getElementById('invoiceName').value,
-        mechanik: document.getElementById('mechanic').value,
-        uslugi: selectedServices.map(s => s.name).join(', '),
-        faktura_netto: invoiceAmount,
-        czesci_netto: partsCost,
-        robocizna_netto: laborCost,
-        zysk_firmy: invoiceAmount - partsCost - laborCost,
+        id_arkusza: currentID,             // Kolumna B: Rodzaj usług (ID)
+        data_realizacji: document.getElementById('projectDate').value, // Kolumna A
+        nr_zlecenia_opis: document.getElementById('invoiceName').value, // Kolumna C
+        zakres_uslug: selectedServices.map(s => `${s.name} (${s.cost})`).join(', '), // Kolumna D
+        
+        // POPRAWKA DO PUNKTU 2a (Kolumna E)
+        faktura_netto: invoiceAmount, 
+        
+        // POPRAWKA DO PUNKTU 3 (Zamiana kolejności H i I)
+        // W Make.com musisz przypisać to pole do nowej kolumny "Części zam. i materiały"
+        czesci_netto: partsCost, 
+        
+        // W Make.com przypisz to do "Koszt robocizny"
+        robocizna_netto: laborCost, 
+
+        // Kolumna J: Wynagr. dla mech. (To zazwyczaj to samo co koszt robocizny, chyba że masz inną logikę?)
+        // Zakładam, że koszt robocizny = to co dostaje mechanik.
+        wynagrodzenie_mech: laborCost,
+
+        // Nowa Kolumna K: Wynik
+        wynik: result,
+        
+        mechanik: document.getElementById('mechanic').value, 
         timestamp: new Date().toISOString()
       };
 
@@ -458,10 +539,12 @@
       document.getElementById('mechanic').value = '';
       document.getElementById('msg').textContent = '';
       document.getElementById('sendBtn').textContent = '🚀 Wyślij';
+      document.getElementById('customPrice').value = '';
       
       selectedServices = [];
-      loadServices(); // Clears grid
+      loadServices(); 
       renderSelectedList();
+      generateID();
     }
   </script>
 </body>
