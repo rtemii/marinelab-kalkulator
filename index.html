@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MarineLab Pro v2.1</title>
+  <title>MarineLab Pro v2.3</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
@@ -71,21 +71,6 @@
       font-size: 15px; transition: all 0.3s ease;
     }
     select:focus, input:focus { outline: none; border-color: #4472C4; box-shadow: 0 0 0 3px rgba(68,114,196,0.1); }
-
-    /* ID Display */
-    .id-display {
-      background: #e9ecef;
-      padding: 10px;
-      text-align: center;
-      font-family: monospace;
-      font-size: 16px;
-      font-weight: bold;
-      color: #333;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      letter-spacing: 2px;
-      border: 1px solid #ccc;
-    }
 
     /* Service Grid */
     .service-grid {
@@ -182,7 +167,7 @@
 
   <div class="container">
     <div class="header">
-      <h1>🛠️ MarineLab Pro <small style="font-size:0.6em; opacity:0.8">v2.1</small></h1>
+      <h1>🛠️ MarineLab Pro <small style="font-size:0.6em; opacity:0.8">v2.3</small></h1>
       <div class="status-badge" id="dbStatus">📦 Baza: Domyślna</div>
     </div>
 
@@ -190,18 +175,9 @@
       <!-- LEFT PANEL -->
       <div class="panel-left">
         
-        <!-- ID Display -->
-        <label>ID Arkusza:</label>
-        <div id="generatedID" class="id-display">-----/--/--/-</div>
-
         <div class="form-group">
-          <label>📅 Data realizacji zlecenia</label>
-          <input type="month" id="projectDate" onchange="generateID()">
-        </div>
-
-        <div class="form-group">
-          <label>Nr i data zlecenia (opis)</label>
-          <input type="text" id="invoiceName" placeholder="Z Subiekt NeksoPro...">
+          <label>Numer Zamówienia (ZK)</label>
+          <input type="text" id="invoiceName" placeholder="Wpisz numer ZK...">
         </div>
 
         <div class="form-group">
@@ -217,7 +193,7 @@
             <input type="number" id="invoiceAmount" placeholder="0.00" oninput="updateResults()">
           </div>
           <div>
-            <label>⚙️ Części zamienne koszt netto</label>
+            <label>⚙️ Części zam. koszt netto</label>
             <input type="number" id="partsCost" placeholder="0.00" oninput="updateResults()">
           </div>
         </div>
@@ -238,7 +214,7 @@
           </div>
         </div>
 
-        <!-- Custom Service Input (Inne-3) -->
+        <!-- Custom Service Input -->
         <div class="manual-service-box" id="manualBox" style="display:none;">
           <label style="margin-bottom:5px; font-size:11px;">Dodaj niestandardową usługę (Inne-3/Dojazd)</label>
           <div class="manual-row">
@@ -252,17 +228,26 @@
         <div id="servicesList" class="services-list"></div>
 
         <div class="results-card">
+          <!-- REORDERED SECTION START -->
           <div class="result-row">
-            <span>Robocizna koszt netto:</span> <strong id="laborCost">0.00 zł</strong>
+            <span>Przychód netto wg faktury:</span> <strong id="invoiceTotalDisplay">0.00 zł</strong>
           </div>
           <div class="result-row">
             <span>Części zam. koszt netto:</span> <strong id="partsCostDisplay">0.00 zł</strong>
           </div>
           <div class="result-row">
-            <span>Przychód netto wg faktury:</span> <strong id="invoiceTotalDisplay">0.00 zł</strong>
+            <span>Robocizna koszt netto:</span> <strong id="laborCost">0.00 zł</strong>
           </div>
+          <!-- REORDERED SECTION END -->
+
+          <hr style="margin:10px 0; border:0; border-top:1px dashed #ddd;">
+          
+          <div class="result-row" style="font-size:13px; color:#007bff">
+            <span>Dla Mechanika (<span id="mechPercent">100%</span>):</span> <strong id="mechSalaryDisplay">0.00 zł</strong>
+          </div>
+          
           <div class="total-profit" id="companyProfit">
-            Wynik: 0.00 zł
+            Wynik (Firma): 0.00 zł
           </div>
         </div>
       </div>
@@ -272,93 +257,51 @@
   <script>
     // --- KONFIGURACJA ---
     const SEND_WEBHOOK_URL = 'https://hook.eu2.make.com/s3zw427rmr92hlo9sb4s9s8g4d6fsa42';
-  const DB_WEBHOOK_URL = 'https://hook.eu2.make.com/as0emqranzdjwst67bvy37101wv5gp1s'; 
+    const DB_WEBHOOK_URL = 'https://hook.eu2.make.com/as0emqranzdjwst67bvy37101wv5gp1s'; 
 
     const DEFAULT_PRICES = {
-      "Marek": { 
-        "Roboczogodzina": 300, 
-        "1-cyl przegląd": 210, 
-        "2-cyl przegląd": 320, 
-        "4-cyl przegląd": 900, 
-        "Mały montaż": 1500, 
-        "Inne-1": 100,
-        "Inne-2": 200
-      },
-      "Waldek": { "1 godzina": 100, "Inne-1": 100, "Inne-2": 200 },
-      "Jarek": { "1 godzina": 100, "Inne-1": 100, "Inne-2": 200 },
+      "Marek": { "Roboczogodzina": 300, "1-cyl przegląd": 210, "Inne-1": 100 },
+      "Waldek": { "1 godzina": 100, "Inne-1": 100 },
+      "Jarek": { "1 godzina": 100, "Inne-1": 100 },
+      "Jacek": { "1 godzina": 100, "Inne-1": 100 },
       "Roman": {}
     };
 
     let pricesDB = DEFAULT_PRICES;
     let selectedServices = [];
-    let currentID = "";
 
-    // --- INITIALIZATION ---
     window.onload = async function() {
-      const dateInput = document.getElementById('projectDate');
-      const now = new Date();
-      dateInput.value = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
-
       await fetchPrices();
       populateMechanics();
-      generateID();
     };
 
-    // --- LOGIC ---
     function handleMechanicChange() {
       loadServices();
-      generateID();
-    }
-
-    function generateID() {
-      const dateVal = document.getElementById('projectDate').value; // YYYY-MM
-      const mechVal = document.getElementById('mechanic').value;
-      
-      if (!dateVal) return;
-
-      // 1. Numer kolejny (Losowy 5 cyfr, bo HTML nie ma bazy danych liczników)
-      const sequence = Math.floor(10000 + Math.random() * 90000); 
-      
-      // 2. Data
-      const [year, month] = dateVal.split('-');
-      const shortYear = year.slice(2);
-
-      // 3. Inicjał
-      const initial = mechVal ? mechVal.charAt(0).toUpperCase() : 'X';
-
-      // Format: 11111/22/33/A
-      currentID = `${sequence}/${month}/${shortYear}/${initial}`;
-      document.getElementById('generatedID').textContent = currentID;
     }
 
     async function fetchPrices() {
       if (!DB_WEBHOOK_URL || DB_WEBHOOK_URL.includes('TWOJ_KOD')) return; 
-
       document.getElementById('loader').style.display = 'flex';
       try {
         const response = await fetch(DB_WEBHOOK_URL);
         if (response.ok) {
           const rawData = await response.json();
           let newPricesDB = {};
-
           if (Array.isArray(rawData)) {
             rawData.forEach(row => {
               let mechName = row["Technik"] || row["A"] || row[0];
               let svcName = row["Service"] || row["B"] || row[1];
               let price = row["Price_Net"] || row["C"] || row[2];
-
               if (mechName && svcName) {
                 if (!newPricesDB[mechName]) newPricesDB[mechName] = {};
                 newPricesDB[mechName][svcName] = Number(price);
               }
             });
-            // Dodaj Inne-1 i Inne-2 jeśli ich nie ma w Excelu
             Object.keys(newPricesDB).forEach(m => {
               if(!newPricesDB[m]["Inne-1"]) newPricesDB[m]["Inne-1"] = 100;
               if(!newPricesDB[m]["Inne-2"]) newPricesDB[m]["Inne-2"] = 200;
             });
           }
-
           if (Object.keys(newPricesDB).length > 0) {
             pricesDB = newPricesDB;
             document.getElementById('dbStatus').textContent = '🟢 Baza: Excel (Live)';
@@ -366,11 +309,8 @@
             document.getElementById('dbStatus').style.color = '#155724';
           }
         }
-      } catch (e) {
-        console.error("Błąd bazy", e);
-      } finally {
-        document.getElementById('loader').style.display = 'none';
-      }
+      } catch (e) { console.error("Błąd bazy", e); } 
+      finally { document.getElementById('loader').style.display = 'none'; }
     }
 
     function populateMechanics() {
@@ -388,20 +328,16 @@
       let mechanic = document.getElementById('mechanic').value;
       let grid = document.getElementById('servicesGrid');
       let manualBox = document.getElementById('manualBox');
-      
       selectedServices = [];
       updateResults();
-      
       if (!mechanic) {
         grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#999; padding: 40px;">Najpierw wybierz wykonawcę 👈</div>';
         manualBox.style.display = 'none';
         return;
       }
-
-      manualBox.style.display = 'block'; // Pokaż pole Inne-3
+      manualBox.style.display = 'block'; 
       const services = pricesDB[mechanic] || {};
       const keys = Object.keys(services);
-
       grid.innerHTML = keys.map(svc => `
         <div class="service-item" onclick="toggleService('${svc}')">
           <strong>${svc}</strong>
@@ -421,12 +357,8 @@
     function addCustomService() {
       const name = document.getElementById('customName').value || "Inne-3";
       const price = parseFloat(document.getElementById('customPrice').value);
-      
       if (!price || price <= 0) return alert("Wpisz poprawną kwotę!");
-
       selectedServices.push({ name: name, cost: price });
-      
-      // Reset input
       document.getElementById('customPrice').value = '';
       renderSelectedList();
       updateResults();
@@ -449,63 +381,54 @@
     }
 
     function updateResults() {
+      let mechanic = document.getElementById('mechanic').value;
       let invoiceAmount = parseFloat(document.getElementById('invoiceAmount').value) || 0;
       let partsCost = parseFloat(document.getElementById('partsCost').value) || 0;
       let laborCost = selectedServices.reduce((sum, item) => sum + item.cost, 0);
-      let profit = invoiceAmount - partsCost - laborCost;
+
+      let salaryMultiplier = (mechanic === 'Marek') ? 0.50 : 1.00;
+      let mechanicSalary = laborCost * salaryMultiplier;
+      let profit = invoiceAmount - partsCost - mechanicSalary;
 
       document.getElementById('laborCost').textContent = laborCost.toFixed(2) + ' zł';
-      document.getElementById('partsCostDisplay').textContent = partsCost.toFixed(2) + ' zł';
+      document.getElementById('mechPercent').textContent = (salaryMultiplier * 100) + '%';
+      document.getElementById('mechSalaryDisplay').textContent = mechanicSalary.toFixed(2) + ' zł';
       document.getElementById('invoiceTotalDisplay').textContent = invoiceAmount.toFixed(2) + ' zł';
+      document.getElementById('partsCostDisplay').textContent = partsCost.toFixed(2) + ' zł';
       
       const profitEl = document.getElementById('companyProfit');
-      profitEl.textContent = 'Wynik: ' + profit.toFixed(2) + ' zł';
+      profitEl.textContent = 'Wynik (Firma): ' + profit.toFixed(2) + ' zł';
       profitEl.style.color = profit >= 0 ? '#28a745' : '#dc3545';
 
-      const isValid = document.getElementById('projectDate').value && 
-                      document.getElementById('invoiceName').value && 
+      const isValid = document.getElementById('invoiceName').value && 
                       document.getElementById('mechanic').value;
       document.getElementById('sendBtn').disabled = !isValid;
     }
 
-        async function sendToMake() {
+    async function sendToMake() {
       const btn = document.getElementById('sendBtn');
       const msg = document.getElementById('msg');
-      
       btn.disabled = true;
       btn.textContent = '⏳ Wysyłanie...';
 
+      let mechanic = document.getElementById('mechanic').value;
       let invoiceAmount = parseFloat(document.getElementById('invoiceAmount').value) || 0;
       let partsCost = parseFloat(document.getElementById('partsCost').value) || 0;
       let laborCost = selectedServices.reduce((sum, item) => sum + item.cost, 0);
-
-      // Obliczenie wyniku (Zysku)
-      let result = invoiceAmount - partsCost - laborCost;
+      
+      let salaryMultiplier = (mechanic === 'Marek') ? 0.50 : 1.00;
+      let mechanicSalary = laborCost * salaryMultiplier;
+      let profit = invoiceAmount - partsCost - mechanicSalary;
 
       const payload = {
-        id_arkusza: currentID,             // Kolumna B: Rodzaj usług (ID)
-        data_realizacji: document.getElementById('projectDate').value, // Kolumna A
-        nr_zlecenia_opis: document.getElementById('invoiceName').value, // Kolumna C
-        zakres_uslug: selectedServices.map(s => `${s.name} (${s.cost})`).join(', '), // Kolumna D
-        
-        // POPRAWKA DO PUNKTU 2a (Kolumna E)
-        faktura_netto: invoiceAmount, 
-        
-        // POPRAWKA DO PUNKTU 3 (Zamiana kolejności H i I)
-        // W Make.com musisz przypisać to pole do nowej kolumny "Części zam. i materiały"
-        czesci_netto: partsCost, 
-        
-        // W Make.com przypisz to do "Koszt robocizny"
-        robocizna_netto: laborCost, 
-
-        // Kolumna J: Wynagr. dla mech. (To zazwyczaj to samo co koszt robocizny, chyba że masz inną logikę?)
-        // Zakładam, że koszt robocizny = to co dostaje mechanik.
-        wynagrodzenie_mech: laborCost,
-
-        // Nowa Kolumna K: Wynik
-        wynik: result,
-        
-        mechanik: document.getElementById('mechanic').value, 
+        nr_zlecenia_opis: document.getElementById('invoiceName').value, 
+        mechanik: mechanic,
+        uslugi_lista: selectedServices.map(s => `${s.name} (${s.cost})`).join(', '),
+        faktura_netto: invoiceAmount,
+        czesci_netto: partsCost,
+        robocizna_netto: laborCost,
+        wynagrodzenie_mech: mechanicSalary, 
+        wynik: profit, 
         timestamp: new Date().toISOString()
       };
 
@@ -539,11 +462,9 @@
       document.getElementById('msg').textContent = '';
       document.getElementById('sendBtn').textContent = '🚀 Wyślij';
       document.getElementById('customPrice').value = '';
-      
       selectedServices = [];
       loadServices(); 
       renderSelectedList();
-      generateID();
     }
   </script>
 </body>
