@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MarineLab Pro v2.3</title>
+  <title>MarineLab Pro v2.4</title>
   <style>
+    /* ... (CSS STYLES REMAIN SAME) ... */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -25,8 +26,6 @@
       display: flex;
       flex-direction: column;
     }
-    
-    /* Header Styles */
     .header {
       background: linear-gradient(135deg, #4472C4 0%, #365A99 100%);
       color: white; 
@@ -38,106 +37,28 @@
     }
     .header h1 { font-size: 24px; margin: 0; }
     .status-badge { font-size: 12px; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 15px; }
-
-    /* Layout */
-    .main-content {
-      display: flex;
-      flex-wrap: wrap;
-    }
-    .panel-left {
-      flex: 1;
-      min-width: 350px;
-      padding: 30px;
-      border-right: 1px solid #eee;
-    }
-    .panel-right {
-      flex: 1.5;
-      min-width: 350px;
-      padding: 30px;
-      background: #fcfcfc;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Form Elements */
+    .main-content { display: flex; flex-wrap: wrap; }
+    .panel-left { flex: 1; min-width: 350px; padding: 30px; border-right: 1px solid #eee; }
+    .panel-right { flex: 1.5; min-width: 350px; padding: 30px; background: #fcfcfc; display: flex; flex-direction: column; }
     .form-group { margin-bottom: 20px; }
     .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
     .form-row > div { flex: 1; }
-    
     label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-    select, input { 
-      width: 100%; padding: 12px 15px; 
-      border: 2px solid #e1e5e9; border-radius: 8px; 
-      font-size: 15px; transition: all 0.3s ease;
-    }
+    select, input { width: 100%; padding: 12px 15px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 15px; transition: all 0.3s ease; }
     select:focus, input:focus { outline: none; border-color: #4472C4; box-shadow: 0 0 0 3px rgba(68,114,196,0.1); }
-
-    /* Service Grid */
-    .service-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 10px;
-      max-height: 350px;
-      overflow-y: auto;
-      padding: 5px;
-    }
-    .service-item {
-      padding: 10px;
-      border: 2px solid #eef2f7;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: white;
-      font-size: 13px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 70px;
-    }
+    .service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-height: 350px; overflow-y: auto; padding: 5px; }
+    .service-item { padding: 10px; border: 2px solid #eef2f7; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: white; font-size: 13px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 70px; }
     .service-item:hover { border-color: #4472C4; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     .service-item.selected { background: #4472C4; color: white; border-color: #365A99; }
-    
-    /* Manual Service Input */
-    .manual-service-box {
-      background: #e3f2fd;
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 15px;
-      border: 1px solid #bbdefb;
-    }
+    .manual-service-box { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #bbdefb; }
     .manual-row { display: flex; gap: 10px; align-items: flex-end; }
     .manual-btn { background: #1976d2; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
-
-    /* Selected List */
-    .services-list {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
-      min-height: 40px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #cbd5e0;
-      margin-top: 15px;
-    }
-    .service-tag {
-      background: #fff; border: 1px solid #4472C4; color: #4472C4;
-      padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: 600;
-      display: flex; align-items: center; gap: 5px;
-    }
+    .services-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; min-height: 40px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #cbd5e0; margin-top: 15px; }
+    .service-tag { background: #fff; border: 1px solid #4472C4; color: #4472C4; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
     .service-tag span { cursor: pointer; font-weight: bold; color: #dc3545; }
-
-    /* Results */
-    .results-card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-      margin-top: auto; 
-    }
+    .results-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-top: auto; }
     .result-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #555; }
-    .total-profit { 
-      font-size: 22px; font-weight: bold; color: #28a745; 
-      text-align: center; margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; 
-    }
-    
-    /* Buttons */
+    .total-profit { font-size: 22px; font-weight: bold; color: #28a745; text-align: center; margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
     .btn-group { display: flex; gap: 10px; margin-top: 20px; }
     .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -145,20 +66,8 @@
     .btn-primary:hover { background: #365A99; }
     .btn-outline { background: transparent; border: 2px solid #ddd; color: #666; }
     .btn-outline:hover { border-color: #aaa; }
-
-    .loading-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center;
-      z-index: 1000; font-weight: bold; color: #4472C4;
-    }
-
-    @media (max-width: 768px) {
-      .container { flex-direction: column; max-height: none; border-radius: 0; }
-      body { padding: 0; }
-      .main-content { flex-direction: column; }
-      .panel-left, .panel-right { padding: 20px; border: none; }
-      .service-grid { max-height: 200px; }
-    }
+    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; font-weight: bold; color: #4472C4; }
+    @media (max-width: 768px) { .container { flex-direction: column; max-height: none; border-radius: 0; } body { padding: 0; } .main-content { flex-direction: column; } .panel-left, .panel-right { padding: 20px; border: none; } .service-grid { max-height: 200px; } }
   </style>
 </head>
 <body>
@@ -167,7 +76,7 @@
 
   <div class="container">
     <div class="header">
-      <h1>🛠️ MarineLab Pro <small style="font-size:0.6em; opacity:0.8">v2.3</small></h1>
+      <h1>🛠️ MarineLab Pro <small style="font-size:0.6em; opacity:0.8">v2.4</small></h1>
       <div class="status-badge" id="dbStatus">📦 Baza: Domyślna</div>
     </div>
 
@@ -190,11 +99,11 @@
         <div class="form-row">
           <div>
             <label>💰 Przychód netto wg faktury</label>
-            <input type="number" id="invoiceAmount" placeholder="0,00" oninput="updateResults()">
+            <input type="number" id="invoiceAmount" placeholder="0.00" step="0.01" oninput="updateResults()">
           </div>
           <div>
-            <label>⚙️ Części zamienne koszt netto</label>
-            <input type="number" id="partsCost" placeholder="0,00" oninput="updateResults()">
+            <label>⚙️ Części zamienne (koszt netto)</label>
+            <input type="number" id="partsCost" placeholder="0.00" step="0.01" oninput="updateResults()">
           </div>
         </div>
 
@@ -228,17 +137,15 @@
         <div id="servicesList" class="services-list"></div>
 
         <div class="results-card">
-          <!-- REORDERED SECTION START -->
           <div class="result-row">
             <span>Przychód netto wg faktury:</span> <strong id="invoiceTotalDisplay">0.00 zł</strong>
           </div>
           <div class="result-row">
-            <span>Części zam. koszt netto:</span> <strong id="partsCostDisplay">0.00 zł</strong>
+            <span>Części zamienne (koszt netto):</span> <strong id="partsCostDisplay">0.00 zł</strong>
           </div>
           <div class="result-row">
             <span>Robocizna koszt netto:</span> <strong id="laborCost">0.00 zł</strong>
           </div>
-          <!-- REORDERED SECTION END -->
 
           <hr style="margin:10px 0; border:0; border-top:1px dashed #ddd;">
           
@@ -405,6 +312,12 @@
       document.getElementById('sendBtn').disabled = !isValid;
     }
 
+    // --- HELPER TO CONVERT DOT TO COMMA (Polish Format) ---
+    function formatNumber(num) {
+      if (typeof num !== 'number') return "0,00";
+      return num.toFixed(2).replace('.', ',');
+    }
+
     async function sendToMake() {
       const btn = document.getElementById('sendBtn');
       const msg = document.getElementById('msg');
@@ -424,11 +337,14 @@
         nr_zlecenia_opis: document.getElementById('invoiceName').value, 
         mechanik: mechanic,
         uslugi_lista: selectedServices.map(s => `${s.name} (${s.cost})`).join(', '),
-        faktura_netto: invoiceAmount,
-        czesci_netto: partsCost,
-        robocizna_netto: laborCost,
-        wynagrodzenie_mech: mechanicSalary, 
-        wynik: profit, 
+        
+        // Use formatNumber helper to send "123,45" instead of "123.45"
+        faktura_netto: formatNumber(invoiceAmount),
+        czesci_netto: formatNumber(partsCost),
+        robocizna_netto: formatNumber(laborCost),
+        wynagrodzenie_mech: formatNumber(mechanicSalary),
+        wynik: formatNumber(profit),
+        
         timestamp: new Date().toISOString()
       };
 
