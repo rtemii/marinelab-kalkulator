@@ -264,7 +264,7 @@
     function addCustomService() {
       const name = document.getElementById('customName').value || "Inne-3";
       const price = parseFloat(document.getElementById('customPrice').value);
-      if (!price || price <= 0) return alert("Wpisz poprawną kwotę!");
+      if (isNaN(price)) return alert("Wpisz poprawną kwotę!");
       selectedServices.push({ name: name, cost: price });
       document.getElementById('customPrice').value = '';
       renderSelectedList();
